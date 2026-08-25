@@ -42,7 +42,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test \"test/*.test.mjs\"",
+    "test": "npm run build && node --test test/configs.test.mjs test/handshake.test.mjs test/fix.test.mjs",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
