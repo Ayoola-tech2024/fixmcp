@@ -1,34 +1,48 @@
+<div align="center">
+
 # fixmcp
 
-**The MCP configuration doctor.** One command that finds every MCP config on your machine — Claude Code, Claude Desktop, opencode, Cursor, VS Code, Codex CLI — and tells you exactly which servers are broken, why, and how to fix them.
+**The MCP configuration doctor.**
+
+[![CI](https://github.com/Ayoola-tech2024/fixmcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Ayoola-tech2024/fixmcp/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/fixmcp)](https://www.npmjs.com/package/fixmcp)
+[![downloads](https://img.shields.io/npm/dm/fixmcp)](https://www.npmjs.com/package/fixmcp)
+[![Node](https://img.shields.io/node/v/fixmcp)](https://www.npmjs.com/package/fixmcp)
+[![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+
+One command that finds every MCP config on your machine, handshakes every server for real,
+and tells you exactly what's broken and how to fix it.
 
 ```bash
 npx fixmcp
 ```
 
-No more staring at `MCP error -32001: Request timed out` wondering which of your twelve servers is guilty.
+Works with **Claude Code · Claude Desktop · opencode · Cursor · VS Code · Codex CLI**
+on **Windows · macOS · Linux** — zero install, nothing leaves your machine.
 
-## Why this exists
+</div>
 
-Every MCP agent launches its servers at startup. If even one server is misconfigured — a package that `npx` has to resolve from the registry, a command that isn't on PATH, an env var reference to something unset — you get vague timeout errors like:
+---
+
+## The problem
+
+Every MCP agent launches its servers at startup. If even one is misconfigured — an `npx` package that has to resolve from the registry, a command that isn't on PATH, an env var pointing at something unset — you get this:
 
 ```
 MCP error -32001: Request timed out
 ```
 
-...and the agent either starts without those tools or hangs. The error never tells you *which* server or *why*.
+No server name. No cause. Sometimes your tools just don't load; sometimes the whole agent hangs.
 
-fixmcp was born from exactly this failure: four MCP servers, all timing out on every startup, all because their configs used `npx -y <pkg>@latest` — forcing an npm registry round-trip on **every single launch**, which dies whenever the network is slow at boot. The fix (rewriting configs to cached direct-node paths) took one afternoon once diagnosed. Diagnosing was the hard part. Now it's one command.
+This tool was born from exactly that failure: four MCP servers timing out on *every* startup because their configs used `npx -y <pkg>@latest` — forcing an npm registry round-trip on each launch, which dies whenever the network is slow at boot. Diagnosing it took an afternoon; fixing it took minutes. fixmcp collapses that diagnosis to one command.
 
-## What it does
+## Why static linting isn't enough
 
-1. **Discovers** MCP configs across six agents (skips files that don't exist)
-2. **Runs static checks** — command resolution, env var references, known footguns, duplicate names
-3. **Actually spawns each stdio server** and performs a real JSON-RPC `initialize` handshake + `tools/list` — the same thing your agent does at startup
-4. **Reports** per-server findings with severities and exact causes
-5. Optionally **rewrites fragile configs** (`--fix`) with a `.fixmcp.bak` backup first
+You can read a config and see nothing wrong — syntactically valid entries still time out at boot. So fixmcp doesn't just parse configs:
 
-Static linting can't catch "this server dies 4 seconds after spawning." A real handshake can.
+> **It spawns every stdio server and performs a real JSON-RPC `initialize` handshake plus `tools/list`** — the same conversation your agent has at startup. What fixmcp reports matches what actually happens.
+
+It also counts startup latency and discovered tools per server, so you get `initialize OK in 3264ms, 29 tool(s)` instead of vibes.
 
 ## Sample output
 
@@ -49,47 +63,47 @@ opencode
 all servers healthy
 ```
 
-Exit codes make it CI-friendly: `0` healthy/warnings only · `1` at least one error · `2` internal failure.
+Machine-readable mode and exit codes (`0` healthy/warnings · `1` errors · `2` internal failure) make it pipeline- and agent-friendly:
 
 ```bash
-npx fixmcp --json | jq '.errors'   # machine-readable mode for pipelines
+npx fixmcp --json | jq '.errors'
 ```
 
 ## What it checks
 
 | Check | stdio | http/sse | Catches |
-|---|---|---|---|
-| command-resolution | ✓ | | Commands not on PATH, missing node scripts, unpinned `npx pkg@latest` registry round-trips |
-| handshake | ✓ | | Servers that spawn but never answer `initialize`; counts tools via `tools/list` |
-| network | | ✓ | Unreachable endpoints (DNS, refused, timeout) with the OS error code |
-| env-check | ✓ | ✓ | `${VAR}` references to variables not set on your machine |
-| patterns | ✓ | ✓ | `npx` without `-y` (interactive prompt hang), ignored Claude Desktop `timeout` field ([#43791](https://github.com/anthropics/claude-code/issues/43791)) |
-| duplicates | ✓ | ✓ | Same server name defined in multiple agents |
+|---|:-:|:-:|---|
+| **command-resolution** | ✓ | | Commands not on PATH, missing node scripts, unpinned `npx pkg@latest` registry round-trips |
+| **handshake** | ✓ | | Servers that spawn but never answer `initialize`; per-server latency + tool count |
+| **network** | | ✓ | Unreachable endpoints (DNS, connection refused, timeout) with the OS error code |
+| **env-check** | ✓ | ✓ | `${VAR}` references to variables not set on your machine |
+| **patterns** | ✓ | ✓ | `npx` without `-y` (interactive-prompt hang), Claude Desktop silently ignoring `timeout` ([anthropics/claude-code#43791](https://github.com/anthropics/claude-code/issues/43791)) |
+| **duplicates** | ✓ | ✓ | The same server name defined in multiple agents |
 
 ## Supported agents
 
 | Agent | Config file | Auto-fix |
-|---|---|---|
-| Claude Code | `~/.claude.json` | yes |
-| Claude Desktop | `%APPDATA%\Claude\claude_desktop_config.json` | yes |
-| Cursor | `~/.cursor/mcp.json` | yes |
-| VS Code | `%APPDATA%\Code\User\mcp.json` | yes |
+|---|---|:-:|
+| Claude Code | `~/.claude.json` | ✓ |
+| Claude Desktop | `%APPDATA%\Claude\claude_desktop_config.json` | ✓ |
+| Cursor | `~/.cursor/mcp.json` | ✓ |
+| VS Code | `%APPDATA%\Code\User\mcp.json` | ✓ |
 | opencode | `~/.config/opencode/opencode.jsonc` | report-only* |
 | Codex CLI | `~/.codex/config.toml` | report-only* |
 
-\* These formats carry comments/formatting that naive rewrites would destroy, so fixmcp reports exact manual instructions instead of mangling them.
+\* These formats carry comments and formatting that naive rewrites would destroy, so fixmcp prints exact manual instructions instead of mangling them.
 
-Windows, macOS, and Linux are supported. On Windows, `.cmd`/`.bat` commands are correctly routed through `cmd.exe` (Node ≥ 20 refuses to spawn them directly) and child process trees are cleaned up via `taskkill /T`.
+Windows gets first-class treatment: `.cmd`/`.bat` commands are routed through `cmd.exe` (Node ≥ 20 refuses to spawn them directly), PATH lookup honors `PATHEXT`, and child process trees are cleaned up via `taskkill /T`.
 
 ## The `--fix` rewrite
 
-The classic failure mode this tool was built around:
+The classic failure mode this tool exists for:
 
 ```json
 "context7": { "command": "npx", "args": ["-y", "@upstash/context7-mcp@latest"] }
 ```
 
-`@latest` means npm hits the registry on **every agent startup**. Slow network at boot → 90-second timeout → `-32001`. fixmcp's `--fix` rewrites entries like this to point directly at the already-installed script:
+`@latest` means npm hits the registry on **every agent startup**. Slow network at boot → 90-second timeout → `-32001`. With `--fix`, fixmcp rewrites entries like this to point directly at the already-installed script:
 
 ```json
 "context7": {
@@ -105,32 +119,70 @@ Zero network dependency at startup. Millisecond launches. Safety rails:
 - Entries whose package isn't installed globally are skipped — fixmcp never downloads anything
 - Re-run `fixmcp` afterwards to verify the fix landed
 
-Note: if you rewrite to direct-node paths, remember to re-run `npm i -g <pkg>` when you want to update that server — that trade (one manual update vs. every-boot registry gamble) is the whole point.
+Trade-off to know: after rewriting, update a server manually via `npm i -g <pkg>` when you want a new version — one deliberate update beats gambling on the registry every boot.
+
+## For humans *and* agents
+
+fixmcp is designed to be driven by both:
+
+- **You:** `npx fixmcp` when something breaks
+- **Your coding agents:** `npx fixmcp --json` + exit codes give Claude Code, Cursor, opencode etc. everything they need to diagnose and even self-heal their own MCP setups when you report an error
+
+Add this to your project's `AGENTS.md` (or global agent instructions):
+
+```markdown
+When the user reports MCP server errors or timeouts, run:
+  npx fixmcp --json
+Read findings[].message/detail for exact causes. Apply config fixes with:
+  npx fixmcp --fix
+Then re-run without flags to verify.
+```
 
 ## FAQ
 
-**Does fixmcp send my config anywhere?**
+<details>
+<summary><b>Does fixmcp send my config anywhere?</b></summary>
+
 No. Everything runs locally. Nothing is uploaded, ever.
+</details>
 
-**Will it modify anything without asking?**
-It only writes files with `--fix`, always after a `.bak` backup, and only plain-JSON configs. Without `--fix` it is strictly read-only.
+<details>
+<summary><b>Will it modify anything without asking?</b></summary>
 
-**My server needs env vars/auth to start — will the handshake fail?**
-If a server exits because of missing credentials, fixmcp shows its stderr tail as the failure detail so you can see the actual cause instead of a bare timeout.
+It only writes files with <code>--fix</code>, always after a <code>.bak</code> backup, and only plain-JSON configs. Without <code>--fix</code> it is strictly read-only.
+</details>
 
-**How is this different from just reading my configs?**
-You can read a config and see nothing wrong — syntactically valid entries still time out at boot. fixmcp runs the same handshake your agent runs, so what it reports matches what actually happens.
+<details>
+<summary><b>My server needs env vars/auth to start - will the handshake fail?</b></summary>
+
+Possibly, and that's useful: if a server exits due to missing credentials, fixmcp shows its stderr tail as the failure detail so you see the actual cause instead of a bare timeout.
+</details>
+
+<details>
+<summary><b>How long does a scan take?</b></summary>
+
+A few seconds per stdio server (that's a real process launch + handshake). Use <code>--timeout &lt;ms&gt;</code> to tune, or <code>--no-handshake</code> for instant static-only checks.
+</details>
 
 ## Development
 
 ```bash
-npm install
-npm test        # build + run test suite (includes real stdio handshake tests)
+git clone https://github.com/Ayoola-tech2024/fixmcp
+cd fixmcp && npm install
+npm test        # build + full suite, including real stdio handshake tests
 node bin/fixmcp.js --help
 ```
 
-Requires Node ≥ 20. TypeScript strict mode; zero runtime dependencies beyond `jsonc-parser` and `smol-toml`.
+Requires Node ≥ 20. TypeScript strict mode. Runtime dependencies: `jsonc-parser` and `smol-toml` — that's the entire list.
+
+Contributions welcome: open an issue before large changes, keep PRs focused. Areas that especially need coverage: more agent config formats, more real-world footgun patterns for `checkPatterns`, and macOS/Linux path testing.
 
 ## License
 
-[MIT](./LICENSE) © Ayoola Damisile
+[MIT](./LICENSE) © [Ayoola Damisile](https://github.com/Ayoola-tech2024)
+
+<div align="center">
+
+If fixmcp saved you a debugging session, consider leaving a star — it helps other people find it.
+
+</div>
