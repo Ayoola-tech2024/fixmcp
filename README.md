@@ -28,7 +28,7 @@ Windows · macOS · Linux — zero install — nothing leaves your machine.
 
 ---
 
-## You know this error
+## Why do my MCP servers fail with `-32001: Request timed out`?
 
 ```
 MCP error -32001: Request timed out
@@ -69,7 +69,7 @@ including per-server latency and discovered tool counts.
 | **patterns** | ✓ | ✓ | `npx` without `-y` (interactive-prompt hang), Claude Desktop silently ignoring `timeout` ([#43791](https://github.com/anthropics/claude-code/issues/43791)) |
 | **duplicates** | ✓ | ✓ | The same server name defined across multiple agents |
 
-## Supported agents
+## Which agents does fixmcp support?
 
 | Agent | Config file | Auto-fix |
 |---|---|:-:|
@@ -86,7 +86,7 @@ fixmcp prints exact manual instructions instead of mangling them.
 Windows is first-class: `.cmd`/`.bat` commands route through `cmd.exe` (Node ≥ 20 refuses to
 spawn them directly), PATH lookup honors `PATHEXT`, and child trees are cleaned via `taskkill /T`.
 
-## The `--fix` rewrite
+## How do I fix a broken MCP server config? (`--fix`)
 
 The footgun this tool exists for:
 
@@ -127,6 +127,16 @@ Then re-run without flags to verify.
 ```
 
 ## FAQ
+
+<details>
+<summary><b>What does <code>MCP error -32001: Request timed out</code> mean?</b></summary>
+
+It's the generic MCP error your agent shows when a server doesn't answer the
+<code>initialize</code> handshake in time. It never names the server or the cause — common
+reasons include <code>npx pkg@latest</code> configs forcing a registry round-trip at startup,
+commands not on PATH, missing env vars, or servers that crash on launch. <code>npx fixmcp</code>
+tells you which server and exactly why.
+</details>
 
 <details>
 <summary><b>Does fixmcp send my config anywhere?</b></summary>
