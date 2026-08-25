@@ -1,0 +1,38 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1a2332"/>
+      <stop offset="1" stop-color="#0d1117"/>
+    </linearGradient>
+    <linearGradient id="pulse" x1="64" y1="256" x2="448" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3fb950"/>
+      <stop offset="1" stop-color="#58e6d9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- app tile -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="url(#bg)"/>
+  <rect x="17.5" y="17.5" width="477" height="477" rx="94.5" stroke="#30363d" stroke-width="3"/>
+
+  <!-- terminal window -->
+  <rect x="88" y="112" width="336" height="288" rx="28" fill="#0d1117" stroke="#30363d" stroke-width="5"/>
+  <path d="M88 168 h336" stroke="#30363d" stroke-width="5"/>
+  <circle cx="128" cy="140" r="10" fill="#f85149"/>
+  <circle cx="160" cy="140" r="10" fill="#d29922"/>
+  <circle cx="192" cy="140" r="10" fill="#3fb950"/>
+
+  <!-- prompt -->
+  <path d="M120 220 l34 26 -34 26" stroke="#8b949e" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="170" y="252" width="44" height="12" rx="6" fill="#8b949e"/>
+
+  <!-- pulse line -->
+  <polyline points="104,352 176,352 208,300 240,392 272,332 292,352 408,352"
+            stroke="url(#pulse)" stroke-width="14"
+            stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- medical cross badge -->
+  <circle cx="404" cy="384" r="52" fill="#238636"/>
+  <circle cx="404" cy="384" r="52" stroke="#0d1117" stroke-width="8"/>
+  <rect x="394" y="356" width="20" height="56" rx="6" fill="#ffffff"/>
+  <rect x="376" y="374" width="56" height="20" rx="6" fill="#ffffff"/>
+</svg>
