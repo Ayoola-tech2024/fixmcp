@@ -12,6 +12,10 @@
 [![Node](https://img.shields.io/node/v/fixmcp)](https://www.npmjs.com/package/fixmcp)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
+<a href="https://www.npmjs.com/package/fixmcp">
+<img src="https://img.shields.io/badge/npm-fixmcp-CB3837?style=for-the-badge&logo=npm&logoColor=white" alt="fixmcp on npm"/>
+</a>
+
 ```bash
 npx fixmcp
 ```
