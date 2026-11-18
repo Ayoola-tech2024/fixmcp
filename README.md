@@ -90,6 +90,16 @@ fixmcp prints exact manual instructions instead of mangling them.
 Windows is first-class: `.cmd`/`.bat` commands route through `cmd.exe` (Node ≥ 20 refuses to
 spawn them directly), PATH lookup honors `PATHEXT`, and child trees are cleaned via `taskkill /T`.
 
+## How fixmcp compares
+
+| Capability | `fixmcp` | Official MCP Inspector | Static Config Linters |
+|---|:-:|:-:|:-:|
+| Auto-discovers all 6 agent configs (`Claude Code`, `Claude Desktop`, `Cursor`, `VS Code`, `opencode`, `Codex CLI`) | ✓ | Manual per server | Partial |
+| Real stdio JSON-RPC `initialize` + `tools/list` handshakes with latency & `stderr` tail | ✓ | Interactive UI | ✗ |
+| Detects & auto-fixes `npx @latest` `-32001` startup timeouts with `.bak` backups | ✓ | ✗ | Partial |
+| Machine-readable `--json` + exit codes (`0`/`1`/`2`) for CI & coding agents | ✓ | ✗ | Varies |
+| Runs offline against local configs with zero account or browser required | ✓ | Browser UI | ✓ |
+
 ## How do I fix a broken MCP server config? (`--fix`)
 
 The footgun this tool exists for:
