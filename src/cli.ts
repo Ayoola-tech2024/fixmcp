@@ -7,14 +7,17 @@ import { checkNetwork } from "./checks/network-check.js";
 import { checkDuplicates, checkPatterns } from "./checks/patterns.js";
 import { renderHuman } from "./report.js";
 import { applyFix, computeFix, npmGlobalRoot, REPORT_ONLY } from "./fix.js";
+import { runMcpServer } from "./server.js";
 import type { ScanSummary, ServerResult } from "./types.js";
 
-const HELP = `fixmcp - diagnose and fix MCP server configuration failures
+const HELP = `fixmcp - cross-agent MCP configuration doctor & diagnostic MCP server
 
 Usage:
   fixmcp [options]
+  fixmcp serve              start as an MCP stdio server (JSON-RPC 2.0)
 
 Options:
+  --serve, --mcp   start as an MCP stdio server (exposes diagnostic tools)
   --json           machine-readable output
   --fix            rewrite fragile npx-based configs (backup written first)
   --no-handshake   skip spawning servers (static checks only)
@@ -33,13 +36,15 @@ export async function run(argv: string[]): Promise<number> {
     args = parseArgs({
       args: argv,
       options: {
+        serve: { type: "boolean", default: false },
+        mcp: { type: "boolean", default: false },
         json: { type: "boolean", default: false },
         fix: { type: "boolean", default: false },
         "no-handshake": { type: "boolean", default: false },
         timeout: { type: "string", default: "8000" },
         help: { type: "boolean", short: "h", default: false },
       },
-      allowPositionals: false,
+      allowPositionals: true,
     });
   } catch (err) {
     console.error(String((err as Error).message));
@@ -50,6 +55,22 @@ export async function run(argv: string[]): Promise<number> {
   if (args.values.help) {
     console.log(HELP);
     return 0;
+  }
+
+  const firstPositional = args.positionals[0];
+  if (
+    args.values.serve ||
+    args.values.mcp ||
+    firstPositional === "serve" ||
+    firstPositional === "mcp"
+  ) {
+    return runMcpServer();
+  }
+
+  if (args.positionals.length > 0) {
+    console.error(`Unknown command: "${firstPositional}"`);
+    console.log(HELP);
+    return 2;
   }
   const timeoutMs = Math.max(500, Number(args.values.timeout) || 8000);
 

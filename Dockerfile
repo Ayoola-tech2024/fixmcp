@@ -37,6 +37,6 @@ COPY --from=builder /app/bin ./bin
 # Ensure binary is executable
 RUN chmod +x bin/fixmcp.js
 
-# Default entrypoint
+# Default entrypoint runs the MCP stdio server (pass CLI flags like `--help` or `--json` to run as CLI)
 ENTRYPOINT ["node", "bin/fixmcp.js"]
-CMD ["--help"]
+CMD ["serve"]

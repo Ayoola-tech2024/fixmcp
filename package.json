@@ -1,7 +1,7 @@
 {
   "name": "fixmcp",
-  "version": "0.1.0",
-  "description": "Diagnose and fix MCP server configuration failures — including MCP error -32001: Request timed out — across Claude Code, Claude Desktop, opencode, Cursor, VS Code and Codex. Real JSON-RPC handshakes, exact causes, safe auto-fix.",
+  "version": "0.2.0",
+  "description": "Cross-agent MCP configuration doctor & diagnostic MCP server — diagnose and fix MCP error -32001 timeouts across Claude Code, Claude Desktop, opencode, Cursor, VS Code and Codex via CLI or MCP tools.",
   "license": "MIT",
   "author": "Ayoola Damisile <damisileayoola@gmail.com>",
   "repository": {
@@ -47,7 +47,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && node --test test/configs.test.mjs test/handshake.test.mjs test/fix.test.mjs test/checks.test.mjs",
+    "test": "npm run build && node --test test/configs.test.mjs test/handshake.test.mjs test/fix.test.mjs test/checks.test.mjs test/server.test.mjs",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

@@ -127,10 +127,43 @@ Zero network at startup. Millisecond launches. Safety rails:
 Trade-off: updating a server afterwards means `npm i -g <pkg>` — one deliberate update beats
 gambling on the registry every boot.
 
-## Built for humans *and* agents
+## Built for humans *and* agents (Dual-Mode: MCP Server + CLI Doctor)
+
+`fixmcp` runs both as a **stdio MCP server** (so your AI agent can self-diagnose and repair its own MCP environment via MCP tools, resources, and prompts) and as a **zero-install CLI doctor**.
+
+### 1. Run as an MCP Server (`fixmcp serve`)
+
+Add `fixmcp` to your `claude_desktop_config.json`, `~/.cursor/mcp.json`, or `~/.claude.json`:
+
+```json
+{
+  "mcpServers": {
+    "fixmcp": {
+      "command": "npx",
+      "args": ["-y", "fixmcp", "serve"]
+    }
+  }
+}
+```
+
+#### Exposed MCP Tools (`tools/list`)
+
+| Tool | Description |
+|---|---|
+| `diagnose_mcp_configs` | Discover and scan all local agent MCP config files (`Claude Code`, `Claude Desktop`, `Cursor`, `VS Code`, `opencode`, `Codex CLI`), running static checks and live stdio JSON-RPC handshakes. |
+| `test_mcp_server` | Spawn any target stdio MCP server command (or probe an HTTP/SSE endpoint) and perform a real `initialize` + `tools/list` handshake with latency and `stderr` diagnostics. |
+| `repair_mcp_configs` | Compute or apply safe rewrites for fragile `npx -y <pkg>@latest` entries to direct cached Node script paths (with `.fixmcp.bak` backups). |
+| `list_agent_config_paths` | Return all supported AI coding agents and their expected MCP config file paths on the current OS. |
+
+#### Exposed MCP Resources & Prompts
+
+- **Resource (`fixmcp://agents/supported`)**: JSON specification of all supported agent configuration targets and formats.
+- **Prompt (`troubleshoot-mcp-timeout`)**: Guided diagnostic workflow for resolving `MCP error -32001: Request timed out`.
+
+### 2. Run as a CLI Doctor (`npx fixmcp`)
 
 Exit codes (`0` healthy · `1` errors · `2` internal) + `--json` mode mean your coding agent
-can drive it. Add this to your project's `AGENTS.md`:
+can also drive it from the terminal. Add this to your project's `AGENTS.md`:
 
 ```markdown
 When the user reports MCP server errors or timeouts, run:
