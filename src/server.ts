@@ -34,6 +34,12 @@ export const MCP_TOOLS = [
       },
       required: [],
     },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   },
   {
     name: "test_mcp_server",
@@ -76,26 +82,38 @@ export const MCP_TOOLS = [
       },
       required: [],
     },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
   },
   {
     name: "repair_mcp_configs",
     description:
-      "Detect and optionally rewrite fragile 'npx -y <pkg>@latest' MCP server configs to direct local node script paths (with automatic .fixmcp.bak backups) to eliminate -32001 startup timeouts.",
+      "Detect and optionally rewrite fragile 'npx -y <pkg>@latest' MCP server configs to direct local node script paths (with automatic .fixmcp.bak backups) to eliminate -32001 startup timeouts. When to use: Call after 'diagnose_mcp_configs' identifies unpinned '@latest' packages in Claude Code, Claude Desktop, Cursor, or VS Code configs. When NOT to use: Do NOT use on JSONC or TOML configs (opencode, Codex CLI) which are report-only. Always run with dryRun: true first to preview the exact diff before applying changes.",
     inputSchema: {
       type: "object",
       properties: {
         dryRun: {
           type: "boolean",
           description:
-            "If true, compute and return the rewrite plan without modifying files on disk (default: true).",
+            "If true, compute and return the rewrite plan without modifying files on disk (default: true). Set to false only after verifying the dry-run diff.",
         },
         homeDir: {
           type: "string",
           description:
-            "Optional custom home directory path to scan.",
+            "Optional custom home directory path to scan instead of default user home.",
         },
       },
       required: [],
+    },
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
     },
   },
   {
@@ -111,6 +129,12 @@ export const MCP_TOOLS = [
         },
       },
       required: [],
+    },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
     },
   },
 ] as const;
@@ -243,6 +267,8 @@ export async function handleJsonRpcMessage(
               name: "fixmcp",
               version: "0.2.0",
             },
+            instructions:
+              "fixmcp is a cross-agent MCP diagnostic suite. Recommended workflow: 1. Call 'diagnose_mcp_configs' to discover broken configs, missing commands, and handshake latency bottlenecks. 2. Call 'test_mcp_server' to probe any specific failing server command over stdio/HTTP. 3. Call 'repair_mcp_configs' with dryRun: true to inspect safe direct-node rewrites before running with dryRun: false.",
           },
         };
       }
